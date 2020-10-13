@@ -35,5 +35,41 @@ function ROLE:Initialize()
 end
 
 if SERVER then
-
+	hook.Add("EntityTakeDamage", "BankerModifyDamage", function(target, dmg_info)
+		local attacker = dmg_info:GetAttacker()
+		
+		if not IsValid(target) or not target:IsPlayer() or target:GetSubRole() ~= ROLE_BANKER then
+			return
+		end
+		
+		dmg_info:SetDamage(dmg_info:GetDamage() * GetConVar("ttt2_banker_recv_dmg_multi"):GetFloat())
+	end)
 end
+
+------------
+-- SHARED --
+------------
+
+hook.Add("TTTPlayerSpeedModifier", "BankerModifySpeed", function(ply, _, _, no_lag)
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+		return
+	end
+	
+	no_lag[1] = no_lag[1] * GetConVar("ttt2_banker_speed_multi"):GetFloat()
+end)
+
+hook.Add("TTT2StaminaDrain", "BankerModifyStaminaDrain", function(ply, stamina_drain_mod)
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+		return
+	end
+	
+	stamina_drain_mod[1] = stamina_drain_mod[1] * GetConVar("ttt2_banker_stamina_drain"):GetFloat()
+end)
+
+hook.Add("TTT2StaminaRegen", "BankerModifyStaminaRegen", function(ply, stamina_regen_mod)
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+		return
+	end
+	
+	stamina_regen_mod[1] = stamina_regen_mod[1] * GetConVar("ttt2_banker_stamina_regen"):GetFloat()
+end)
