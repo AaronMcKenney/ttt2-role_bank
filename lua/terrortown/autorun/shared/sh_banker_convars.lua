@@ -1,5 +1,6 @@
 --ConVar syncing
 CreateConVar("ttt2_banker_ron_swanswon_will", "1", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
+CreateConVar("ttt2_banker_give_handouts", "1", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
 CreateConVar("ttt2_banker_recv_dmg_multi", "1.25", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_speed_multi", "0.8", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_stamina_regen", "0.5", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
@@ -14,6 +15,14 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 		cvar = "ttt2_banker_ron_swanswon_will",
 		checkbox = true,
 		desc = "ttt2_banker_ron_swanswon_will (Def: 1)"
+	})
+	
+	--# Should the banker be able to transfer credits to others?
+	--  ttt2_banker_give_handouts [0/1] (default: 1)
+	table.insert(tbl[ROLE_BANKER], {
+		cvar = "ttt2_banker_give_handouts",
+		checkbox = true,
+		desc = "ttt2_banker_give_handouts (Def: 1)"
 	})
 	
 	--# This multiplier applies directly to the damage that the banker would receive (ex. 2x means the banker takes twice as much damage from all sources).
@@ -63,6 +72,7 @@ end)
 
 hook.Add("TTT2SyncGlobals", "AddBankerGlobals", function()
 	SetGlobalBool("ttt2_banker_ron_swanswon_will", GetConVar("ttt2_banker_ron_swanswon_will"):GetBool())
+	SetGlobalBool("ttt2_banker_give_handouts", GetConVar("ttt2_banker_give_handouts"):GetBool())
 	SetGlobalFloat("ttt2_banker_recv_dmg_multi", GetConVar("ttt2_banker_recv_dmg_multi"):GetFloat())
 	SetGlobalFloat("ttt2_banker_speed_multi", GetConVar("ttt2_banker_speed_multi"):GetFloat())
 	SetGlobalFloat("ttt2_banker_stamina_regen", GetConVar("ttt2_banker_stamina_regen"):GetFloat())
@@ -71,6 +81,9 @@ end)
 
 cvars.AddChangeCallback("ttt2_banker_ron_swanswon_will", function(name, old, new)
 	SetGlobalBool("ttt2_banker_ron_swanswon_will", tobool(tonumber(new)))
+end)
+cvars.AddChangeCallback("ttt2_banker_give_handouts", function(name, old, new)
+	SetGlobalBool("ttt2_banker_give_handouts", tobool(tonumber(new)))
 end)
 cvars.AddChangeCallback("ttt2_banker_recv_dmg_multi", function(name, old, new)
 	SetGlobalFloat("ttt2_banker_recv_dmg_multi", tonumber(new))
