@@ -37,7 +37,7 @@ end
 if SERVER then
 	local function GetAllBankers()
 		banker_list = {}
-		for _, ply in pairs(player.GetAll()) do
+		for _, ply in ipairs(player.GetAll()) do
 			if ply:IsTerror() and ply:Alive() and ply:GetSubRole() == ROLE_BANKER then
 				banker_list[#banker_list + 1] = ply
 			end
@@ -46,17 +46,24 @@ if SERVER then
 		return banker_list
 	end
 	
-	local function ResetBankerData()
-		for _, ply in pairs(player.GetAll()) do
-			ply.credit_bank = 0
+	local function PayBankers(banker_list)
+		for _, banker in ipairs(banker_list) do
+			banker:AddCredits(banker.tmp_payment)
+			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.tmp_payment})
+			banker.tmp_payment = nil
 		end
 	end
 	
+	local function ResetBankerData()
+		for _, ply in ipairs(player.GetAll()) do
+			ply.banker_recv_bonus = false
+		end
+	end
 	hook.Add("TTTPrepareRound", "ResetBankerOnPrepareRound", ResetBankerData)
 	hook.Add("TTTBeginRound", "ResetBankerOnBeginRound", ResetBankerData)
 	
 	hook.Add("TTT2OrderedEquipment", "BankerReceiveCreditsFromShopOrders", function(ply, cls, is_item, credits, ignoreCost)
-		if credits == 0 or ignoreCost then
+		if credits <= 0 or ignoreCost or ply:GetSubRole() == ROLE_BANKER then
 			return
 		end
 		
@@ -65,19 +72,50 @@ if SERVER then
 			return
 		end
 		
-		--Transfer all credits that ply paid to the banker(s).
-		--In case of multiple bankers split the payment evenly (and keep track of fractional credits to accrue later)
-		payment = credits / #banker_list
-		for banker in banker_list do
-			--Accrue all credits that the banker could receive (even fractional credits)
-			banker.credit_bank = banker.credit_bank + payment
-			local real_credits = math.floor(banker.credit_bank)
-			
-			--Send whole credits, and accrue the remaining fractional credits for later use.
-			banker:AddCredits(real_credits)
-			banker.credit_bank = banker.credit_bank - real_credits
-			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = payment})
+		local credits_left = credits
+		for _, banker in ipairs(banker_list) do
+		
 		end
+		
+		--Transfer all credits that the ply paid to the banker(s) semi-evenly.
+		--It's a bit like communism, but only for the rich.
+		--First, distribute all of the credits that can be equally distributed.
+		local base_payment = math.floor(credits / #banker_list)
+		for _, banker in ipairs(banker_list) do
+			banker.tmp_payment = base_payment
+		end
+		
+		--Now distribute the remaining credits as "bonuses"
+		local bonuses_left = credits - #banker_list * base_payment 
+		if bonuses_left > 0 then
+			--We will be divvying up the bonuses by giving a portion of the bankers an extra credit.
+			--banker_recv_bonus will be used to ensure that a singular banker doesn't receive the majority of the bonuses.
+			for _, banker in ipairs(banker_list) do
+				if bonuses_left > 0 and not banker.banker_recv_bonus then
+					banker.tmp_payment = banker.tmp_payment + 1
+					banker.banker_recv_bonus = true
+					bonuses_left = bonuses_left - 1
+				end
+			end
+			
+			if bonuses_left > 0 then
+				--At this point, all of the bankers have received a bonus at some point.
+				--i.e. banker_recv_bonus is true for all.
+				--It is time to reset banker_missed_out while also dishing out the rest of the credits.
+				for _, banker in ipairs(banker_list) do
+					if bonuses_left > 0 then
+						banker.tmp_payment = banker.tmp_payment + 1
+						banker.banker_recv_bonus = true --For sanity
+						bonuses_left = bonuses_left - 1
+					else
+						banker.banker_recv_bonus = false
+					end
+				end
+			end
+		end
+		
+		--Finally, send those paychecks!
+		PayBankers(banker_list)
 	end)
 	
 	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCredits", function(ply, target, credits)
@@ -97,25 +135,36 @@ if SERVER then
 		dmg_info:SetDamage(dmg_info:GetDamage() * GetConVar("ttt2_banker_recv_dmg_multi"):GetFloat())
 	end)
 	
-	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
-		if not GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() or not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() then
+	hook.Add("DoPlayerDeath", "BankerDoPlayerDeath", function(ply, attacker, dmginfo)
+		--DoPlayerDeath is called, followed by PostPlayerDeath, and then finally by PostPlayerDeath.
+		--Player isn't technically dead at this point.
+		if not GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() or not IsValid(ply) or not ply:IsPlayer() or ply:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or not attacker:IsShopper() then
 			return
 		end
 		
-		--Give both the real credits and the fractional credits to the attacker (in case the attacker is another banker, or the attacker has killed multiple bankers who all have fractional credits)
-		attacker.credit_bank = attacker.credit_bank + victim:GetCredits() + victim.credit_bank
+		--The player's credits are transferred to their corpse after this hook normally, where we'll be unable to touch it until someone searches the corpse.
+		--So, for this feature we quickly move the credits to a temporary field to access later.
+		ply.banker_will = ply:GetCredits()
+		ply:SetCredits(0)
+	end)
+	
+	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
+		if not GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() or not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or not attacker:IsShopper() then
+			--Just get rid of banker_will if it exists (as the credits will transfer to the corpse)
+			victim.banker_will = nil
+			return
+		end
 		
-		--Give all of the real credits to the attacker
-		local real_credits = math.floor(attacker.credit_bank)
-		attacker:AddCredits(real_credits)
-		attacker.credit_bank = attacker.credit_bank - real_credits
+		if victim.banker_will and victim.banker_will > 0 then
+			--Give all of the victim's credits (as noted in their will) to the attacker
+			attacker:AddCredits(victim.banker_will)
+			
+			--Send the good news to the attacker.
+			LANG.Msg(attacker, "will_" .. BANKER.name, {c = victim.banker_will})
+		end
 		
-		--Reset the victim's credits now that they've all been donated.
-		victim.credit_bank = 0
-		victim:SetCredits(0)
-		
-		--Send the good news to the attacker.
-		LANG.Msg(attacker, "will_" .. BANKER.name, {banker_name = victim:GetName(), c = payment})
+		--Destroy the evidence.
+		victim.banker_will = nil
 	end)
 end
 
