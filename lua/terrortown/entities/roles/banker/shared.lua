@@ -120,7 +120,7 @@ if SERVER then
 	
 	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCredits", function(ply, target, credits)
 		if not GetConVar("ttt2_banker_give_handouts"):GetBool() and ply:GetSubRole() == ROLE_BANKER then
-			LANG.Msg(banker, "no_handouts_" .. BANKER.name)
+			LANG.Msg(ply, "no_handouts_" .. BANKER.name)
 			return false
 		end
 	end)
