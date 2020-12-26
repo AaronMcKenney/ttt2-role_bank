@@ -1,6 +1,8 @@
 if SERVER then
 	AddCSLuaFile()
 	resource.AddFile("materials/vgui/ttt/dynamic/roles/icon_banker.vmt")
+	util.AddNetworkString("TTT2BankerBroadcastMurderer")
+	util.AddNetworkString("TTT2BankerUpdateHandoutsGiven")
 end
 
 function ROLE:PreInitialize()
@@ -46,37 +48,7 @@ if SERVER then
 		return banker_list
 	end
 	
-	local function PayBankers(banker_list)
-		for _, banker in ipairs(banker_list) do
-			banker:AddCredits(banker.tmp_payment)
-			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.tmp_payment})
-			banker.tmp_payment = nil
-		end
-	end
-	
-	local function ResetBankerData()
-		for _, ply in ipairs(player.GetAll()) do
-			ply.banker_recv_bonus = false
-		end
-	end
-	hook.Add("TTTPrepareRound", "ResetBankerOnPrepareRound", ResetBankerData)
-	hook.Add("TTTBeginRound", "ResetBankerOnBeginRound", ResetBankerData)
-	
-	hook.Add("TTT2OrderedEquipment", "BankerReceiveCreditsFromShopOrders", function(ply, cls, is_item, credits, ignoreCost)
-		if credits <= 0 or ignoreCost or ply:GetSubRole() == ROLE_BANKER then
-			return
-		end
-		
-		banker_list = GetAllBankers()
-		if #banker_list <= 0 then
-			return
-		end
-		
-		local credits_left = credits
-		for _, banker in ipairs(banker_list) do
-		
-		end
-		
+	local function PayBankers(banker_list, credits)
 		--Transfer all credits that the ply paid to the banker(s) semi-evenly.
 		--It's a bit like communism, but only for the rich.
 		--First, distribute all of the credits that can be equally distributed.
@@ -115,13 +87,40 @@ if SERVER then
 		end
 		
 		--Finally, send those paychecks!
-		PayBankers(banker_list)
-	end)
+		for _, banker in ipairs(banker_list) do
+			banker:AddCredits(banker.tmp_payment)
+			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.tmp_payment})
+			banker.tmp_payment = nil
+		end
+	end
 	
-	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCredits", function(ply, target, credits)
-		if not GetConVar("ttt2_banker_give_handouts"):GetBool() and ply:GetSubRole() == ROLE_BANKER then
-			LANG.Msg(ply, "no_handouts_" .. BANKER.name)
-			return false
+	local function SendHandoutsGivenToClient(ply)
+		--Send the updated number of buffs to the client
+		net.Start("TTT2BankerUpdateHandoutsGiven")
+		net.WriteInt(ply.banker_handouts_given, 16)
+		net.Send(ply)
+	end
+	
+	function ROLE:GiveRoleLoadout(ply, isRoleChange)
+		--Maintain banker_recv_bonus across role changes to maintain long term equity.
+		if not ply.banker_recv_bonus then
+			ply.banker_recv_bonus = false
+		end
+		
+		--Always reset the number of handouts given.
+		--Reward players for breaking the system via exuberant role switching (for fun!)
+		ply.banker_handouts_given = 0
+		SendHandoutsGivenToClient(ply)
+	end
+	
+	hook.Add("TTT2OrderedEquipment", "BankerReceiveCreditsFromShopOrders", function(ply, cls, is_item, credits, ignoreCost)
+		if credits <= 0 or ignoreCost or ply:GetSubRole() == ROLE_BANKER then
+			return
+		end
+		
+		banker_list = GetAllBankers()
+		if #banker_list > 0 then
+			PayBankers(banker_list, credits)
 		end
 	end)
 	
@@ -149,13 +148,13 @@ if SERVER then
 	end)
 	
 	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
-		if not GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() or not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or not attacker:IsShopper() then
+		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() then
 			--Just get rid of banker_will if it exists (as the credits will transfer to the corpse)
 			victim.banker_will = nil
 			return
 		end
 		
-		if victim.banker_will and victim.banker_will > 0 then
+		if GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() and victim.banker_will and victim.banker_will > 0 then
 			--Give all of the victim's credits (as noted in their will) to the attacker
 			attacker:AddCredits(victim.banker_will)
 			
@@ -163,8 +162,82 @@ if SERVER then
 			LANG.Msg(attacker, "will_" .. BANKER.name, {c = victim.banker_will})
 		end
 		
+		if GetConVar("ttt2_banker_broadcast_murderer"):GetBool() then
+			net.Start("TTT2BankerBroadcastMurderer")
+			net.WriteString(attacker:GetName())
+			net.Broadcast()
+		end
+		
 		--Destroy the evidence.
 		victim.banker_will = nil
+	end)
+	
+	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCreditsForServer", function(ply, target, credits)
+		--This hook is called in the server right before the transaction takes place.
+		if ply:GetSubRole() ~= ROLE_BANKER then
+			return
+		end
+		
+		local max_handouts = GetConVar("ttt2_banker_max_num_handouts"):GetInt()
+		--Extra check here in case there is a sync issue between Server and Client
+		local handouts_given = 0
+		if ply.banker_handouts_given then
+			handouts_given = ply.banker_handouts_given
+		end
+		
+		if max_handouts >= 0 and handouts_given >= max_handouts then
+			return false, nil
+		end
+		
+		--Keep track of # handouts even if max_handouts == -1 in case max_handouts changes in the middle of the round.
+		ply.banker_handouts_given = handouts_given + 1
+		SendHandoutsGivenToClient(ply)
+		
+		return true, nil
+	end)
+end
+
+if CLIENT then
+	net.Receive("TTT2BankerBroadcastMurderer", function()
+		local client = LocalPlayer()
+		local murderer_name = net.ReadString()
+		
+		EPOP:AddMessage({text = LANG.GetParamTranslation("broadcast_murderer" .. BANKER.name, {name = murderer_name}), color = COLOR_RED}, "", 6)
+	end)
+	
+	net.Receive("TTT2BankerUpdateHandoutsGiven", function()
+		local client = LocalPlayer()
+		local handouts_given = net.ReadInt(16)
+		
+		client.banker_handouts_given = handouts_given
+	end)
+	
+	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCreditsForClient", function(ply, target, credits)
+		--This hook is called in the client to determine if they should be given the option of making a transfer.
+		if ply:GetSubRole() ~= ROLE_BANKER then
+			return
+		end
+		
+		local max_handouts = GetConVar("ttt2_banker_max_num_handouts"):GetInt()
+		local msg = nil
+		--Extra check here in case there is a sync issue between Server and Client
+		local handouts_given = 0
+		if ply.banker_handouts_given then
+			handouts_given = ply.banker_handouts_given
+		end
+		
+		if max_handouts >= 0 then
+			if handouts_given >= max_handouts then
+				return false, LANG.GetTranslation("no_handouts_" .. BANKER.name)
+			end
+			
+			local remaining_handouts = max_handouts - handouts_given
+			msg = LANG.GetParamTranslation("remaining_handouts_" .. BANKER.name, {n = remaining_handouts})
+		else
+			msg = LANG.GetParamTranslation("handouts_given_" .. BANKER.name, {n = handouts_given})
+		end
+		
+		return true, msg
 	end)
 end
 

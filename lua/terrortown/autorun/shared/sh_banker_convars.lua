@@ -1,6 +1,7 @@
 --ConVar syncing
 CreateConVar("ttt2_banker_ron_swanswon_will", "1", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
-CreateConVar("ttt2_banker_give_handouts", "0", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
+CreateConVar("ttt2_banker_broadcast_murderer", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+CreateConVar("ttt2_banker_max_num_handouts", "2", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
 CreateConVar("ttt2_banker_recv_dmg_multi", "1.25", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_speed_multi", "0.8", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_stamina_regen", "0.35", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
@@ -17,12 +18,23 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 		desc = "ttt2_banker_ron_swanswon_will (Def: 1)"
 	})
 	
-	--# Should the banker be able to transfer credits to others?
-	--  ttt2_banker_give_handouts [0/1] (default: 0)
+	--# If The banker is killed by a player, should everyone be informed about their murderer?
+	--  ttt2_banker_broadcast_murderer [0/1] (default: 1)
 	table.insert(tbl[ROLE_BANKER], {
-		cvar = "ttt2_banker_give_handouts",
+		cvar = "ttt2_banker_broadcast_murderer",
 		checkbox = true,
-		desc = "ttt2_banker_give_handouts (Def: 0)"
+		desc = "ttt2_banker_broadcast_murderer (Def: 1)"
+	})
+	
+	--# How many credits can the Banker give out to others per round (infinite if -1)?
+	--  ttt2_banker_max_num_handouts [-1..n] (default: 2)
+	table.insert(tbl[ROLE_BANKER], {
+		cvar = "ttt2_banker_max_num_handouts",
+		slider = true,
+		min = -1,
+		max = 10,
+		decimal = 0,
+		desc = "ttt2_banker_max_num_handouts (Def: 2)"
 	})
 	
 	--# This multiplier applies directly to the damage that the banker would receive (ex. 2x means the banker takes twice as much damage from all sources).
@@ -72,7 +84,8 @@ end)
 
 hook.Add("TTT2SyncGlobals", "AddBankerGlobals", function()
 	SetGlobalBool("ttt2_banker_ron_swanswon_will", GetConVar("ttt2_banker_ron_swanswon_will"):GetBool())
-	SetGlobalBool("ttt2_banker_give_handouts", GetConVar("ttt2_banker_give_handouts"):GetBool())
+	SetGlobalBool("ttt2_banker_broadcast_murderer", GetConVar("ttt2_banker_broadcast_murderer"):GetBool())
+	SetGlobalInt("ttt2_banker_max_num_handouts", GetConVar("ttt2_banker_max_num_handouts"):GetInt())
 	SetGlobalFloat("ttt2_banker_recv_dmg_multi", GetConVar("ttt2_banker_recv_dmg_multi"):GetFloat())
 	SetGlobalFloat("ttt2_banker_speed_multi", GetConVar("ttt2_banker_speed_multi"):GetFloat())
 	SetGlobalFloat("ttt2_banker_stamina_regen", GetConVar("ttt2_banker_stamina_regen"):GetFloat())
@@ -82,8 +95,11 @@ end)
 cvars.AddChangeCallback("ttt2_banker_ron_swanswon_will", function(name, old, new)
 	SetGlobalBool("ttt2_banker_ron_swanswon_will", tobool(tonumber(new)))
 end)
-cvars.AddChangeCallback("ttt2_banker_give_handouts", function(name, old, new)
-	SetGlobalBool("ttt2_banker_give_handouts", tobool(tonumber(new)))
+cvars.AddChangeCallback("ttt2_banker_broadcast_murderer", function(name, old, new)
+	SetGlobalBool("ttt2_banker_broadcast_murderer", tobool(tonumber(new)))
+end)
+cvars.AddChangeCallback("ttt2_banker_max_num_handouts", function(name, old, new)
+	SetGlobalInt("ttt2_banker_max_num_handouts", tonumber(new))
 end)
 cvars.AddChangeCallback("ttt2_banker_recv_dmg_multi", function(name, old, new)
 	SetGlobalFloat("ttt2_banker_recv_dmg_multi", tonumber(new))
