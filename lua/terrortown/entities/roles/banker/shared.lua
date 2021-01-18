@@ -148,7 +148,7 @@ if SERVER then
 	end)
 	
 	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
-		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() then
+		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or attacker:SteamID64() == victim:SteamID64() then
 			--Just get rid of banker_will if it exists (as the credits will transfer to the corpse)
 			victim.banker_will = nil
 			return
