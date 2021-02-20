@@ -1,7 +1,9 @@
 if SERVER then
 	AddCSLuaFile()
 	resource.AddFile("materials/vgui/ttt/dynamic/roles/icon_banker.vmt")
+	util.AddNetworkString("TTT2BankerBroadcastSuicide")
 	util.AddNetworkString("TTT2BankerBroadcastMurderer")
+	util.AddNetworkString("TTT2BankerBroadcastCovertSearches")
 	util.AddNetworkString("TTT2BankerUpdateHandoutsGiven")
 end
 
@@ -37,6 +39,9 @@ function ROLE:Initialize()
 end
 
 if SERVER then
+	--ttt2_banker_broadcast_death_mode enum
+	local BROADCAST_DEATH_MODE = {NEVER = 0, SUICIDE = 1, MURDERER = 2}
+	
 	local function GetAllBankers()
 		banker_list = {}
 		for _, ply in ipairs(player.GetAll()) do
@@ -185,14 +190,32 @@ if SERVER then
 		ply:SetCredits(0)
 	end)
 	
-	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
-		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or attacker:SteamID64() == victim:SteamID64() then
-			if GetConVar("ttt2_banker_broadcast_murderer"):GetBool() and victim:GetSubRole() == ROLE_BANKER then
-				net.Start("TTT2BankerBroadcastMurderer")
+	local function BroadcastDeath(victim, attacker_name)
+		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER then
+			return
+		end
+		
+		local mode = GetConVar("ttt2_banker_broadcast_death_mode"):GetInt()
+		if mode == BROADCAST_DEATH_MODE.SUICIDE then
+			net.Start("TTT2BankerBroadcastSuicide")
+			net.WriteString(victim:GetName())
+			net.Broadcast()
+		elseif mode == BROADCAST_DEATH_MODE.MURDERER then
+			net.Start("TTT2BankerBroadcastMurderer")
+			if attacker_name ~= nil then
+				net.WriteString(attacker_name)
+				net.WriteBool(true)
+			else
 				net.WriteString("Something or someone")
 				net.WriteBool(false)
-				net.Broadcast()
 			end
+			net.Broadcast()
+		end
+	end
+	
+	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
+		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or attacker:SteamID64() == victim:SteamID64() then
+			BroadcastDeath(victim, nil)
 			
 			--Get rid of banker_will if it exists (as the credits will transfer to the corpse)
 			victim.banker_will = nil
@@ -207,15 +230,18 @@ if SERVER then
 			LANG.Msg(attacker, "will_" .. BANKER.name, {c = victim.banker_will})
 		end
 		
-		if GetConVar("ttt2_banker_broadcast_murderer"):GetBool() then
-			net.Start("TTT2BankerBroadcastMurderer")
-			net.WriteString(attacker:GetName())
-			net.WriteBool(true)
-			net.Broadcast()
-		end
+		BroadcastDeath(victim, attacker:GetName())
 		
 		--Destroy the evidence.
 		victim.banker_will = nil
+	end)
+	
+	hook.Add("TTTCanSearchCorpse", "BankerCanSearchCorpse", function(ply, rag, isCovert, isLongRange)
+		if GetConVar("ttt2_banker_broadcast_covert_search"):GetBool() and IsValid(ply) and ply:IsPlayer() and IsValid(rag) and rag.was_role == ROLE_BANKER and isCovert then
+			net.Start("TTT2BankerBroadcastCovertSearches")
+			net.WriteString(ply:GetName())
+			net.Broadcast()
+		end
 	end)
 	
 	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCreditsForServer", function(ply, target, credits)
@@ -244,18 +270,28 @@ if SERVER then
 end
 
 if CLIENT then
+	net.Receive("TTT2BankerBroadcastSuicide", function()
+		local banker_name = net.ReadString()
+		EPOP:AddMessage({text = LANG.GetParamTranslation("broadcast_suicide_" .. BANKER.name, {name = banker_name}), color = BANKER.color}, "", 6)
+	end)
+	
 	net.Receive("TTT2BankerBroadcastMurderer", function()
-		local client = LocalPlayer()
 		local murderer_name = net.ReadString()
 		local murderer_known = net.ReadBool()
 		local murder_text = ""
 		if murderer_known then
-			murder_text = LANG.GetParamTranslation("broadcast_murderer" .. BANKER.name, {name = murderer_name})
+			murder_text = LANG.GetParamTranslation("broadcast_murderer_" .. BANKER.name, {name = murderer_name})
 		else
-			murder_text = LANG.GetTranslation("unknown_murderer" .. BANKER.name)
+			murder_text = LANG.GetTranslation("broadcast_unknown_murderer_" .. BANKER.name)
 		end
 		
 		EPOP:AddMessage({text = murder_text, color = COLOR_RED}, "", 6)
+	end)
+	
+	net.Receive("TTT2BankerBroadcastCovertSearches", function()
+		local ply_name = net.ReadString()
+		
+		EPOP:AddMessage({text = LANG.GetParamTranslation("broadcast_covert_search_" .. BANKER.name, {name = ply_name}), color = COLOR_RED}, "", 6)
 	end)
 	
 	net.Receive("TTT2BankerUpdateHandoutsGiven", function()
