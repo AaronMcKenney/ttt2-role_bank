@@ -187,7 +187,14 @@ if SERVER then
 	
 	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
 		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or attacker:SteamID64() == victim:SteamID64() then
-			--Just get rid of banker_will if it exists (as the credits will transfer to the corpse)
+			if GetConVar("ttt2_banker_broadcast_murderer"):GetBool() and victim:GetSubRole() == ROLE_BANKER then
+				net.Start("TTT2BankerBroadcastMurderer")
+				net.WriteString("Something or someone")
+				net.WriteBool(false)
+				net.Broadcast()
+			end
+			
+			--Get rid of banker_will if it exists (as the credits will transfer to the corpse)
 			victim.banker_will = nil
 			return
 		end
@@ -203,6 +210,7 @@ if SERVER then
 		if GetConVar("ttt2_banker_broadcast_murderer"):GetBool() then
 			net.Start("TTT2BankerBroadcastMurderer")
 			net.WriteString(attacker:GetName())
+			net.WriteBool(true)
 			net.Broadcast()
 		end
 		
@@ -239,8 +247,15 @@ if CLIENT then
 	net.Receive("TTT2BankerBroadcastMurderer", function()
 		local client = LocalPlayer()
 		local murderer_name = net.ReadString()
+		local murderer_known = net.ReadBool()
+		local murder_text = ""
+		if murderer_known then
+			murder_text = LANG.GetParamTranslation("broadcast_murderer" .. BANKER.name, {name = murderer_name})
+		else
+			murder_text = LANG.GetTranslation("unknown_murderer" .. BANKER.name)
+		end
 		
-		EPOP:AddMessage({text = LANG.GetParamTranslation("broadcast_murderer" .. BANKER.name, {name = murderer_name}), color = COLOR_RED}, "", 6)
+		EPOP:AddMessage({text = murder_text, color = COLOR_RED}, "", 6)
 	end)
 	
 	net.Receive("TTT2BankerUpdateHandoutsGiven", function()

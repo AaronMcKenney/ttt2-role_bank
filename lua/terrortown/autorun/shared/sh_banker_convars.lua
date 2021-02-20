@@ -33,7 +33,7 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 		desc = "ttt2_banker_ron_swanswon_will (Def: 1)"
 	})
 	
-	--# If The banker is killed by a player, should everyone be informed about their murderer?
+	--# If The banker is killed, should everyone be informed about their murderer?
 	--  ttt2_banker_broadcast_murderer [0/1] (default: 1)
 	table.insert(tbl[ROLE_BANKER], {
 		cvar = "ttt2_banker_broadcast_murderer",

@@ -12,6 +12,7 @@ L["ttt2_desc_" .. BANKER.name] = [[You are a Banker. A banker is a "detective" w
 L["receive_credits_" .. BANKER.name] = "Someone has bought something. Your cut of the profit is {c} credits."
 L["will_" .. BANKER.name] = "You received {c} credit(s) for killing a banker!"
 L["broadcast_murderer" .. BANKER.name] = "{name} has killed a banker!"
+L["unknown_murderer" .. BANKER.name] = "A banker has died under mysterious circumstances!"
 L["handouts_given_" .. BANKER.name] = "{n} handout(s) have been given so far."
 L["remaining_handouts_" .. BANKER.name] = "{n} handout(s) remain."
 L["no_handouts_" .. BANKER.name] = "No more handouts!"
