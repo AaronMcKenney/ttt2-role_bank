@@ -23,7 +23,7 @@ function ROLE:PreInitialize()
 		pct = 0.13, -- necessary: percentage of getting this role selected (per player)
 		maximum = 1, -- maximum amount of roles in a round
 		minPlayers = 5, -- minimum amount of players until this role is able to get selected
-		credits = 1, -- the starting credits of a specific role
+		credits = 2, -- the starting credits of a specific role
 		creditsTraitorKill = 0,
 		creditsTraitorDead = 1,
 		shopFallback = SHOP_FALLBACK_DETECTIVE,
@@ -49,22 +49,37 @@ if SERVER then
 	end
 	
 	local function PayBankers(banker_list, credits)
+		local credit_ceiling = GetConVar("ttt2_banker_credit_ceiling"):GetInt()
+		
 		--Transfer all credits that the ply paid to the banker(s) semi-evenly.
 		--It's a bit like communism, but only for the rich.
 		--First, distribute all of the credits that can be equally distributed.
 		local base_payment = math.floor(credits / #banker_list)
+		local bonuses_left = credits - #banker_list * base_payment 
 		for _, banker in ipairs(banker_list) do
-			banker.tmp_payment = base_payment
+			if credit_ceiling < 0 then
+				banker.banker_tmp_payment = base_payment
+			else
+				--math.max is here in case credit_ceiling drops in the middle of a round.
+				banker.banker_tmp_payment = math.max(math.min(base_payment, credit_ceiling - banker.banker_credits_recv), 0)
+				
+				--If this banker hit the ceiling, anything they didn't receive will be redistributed to others.
+				bonuses_left = bonuses_left + (base_payment - banker.banker_tmp_payment)
+			end
 		end
 		
 		--Now distribute the remaining credits as "bonuses"
-		local bonuses_left = credits - #banker_list * base_payment 
 		if bonuses_left > 0 then
 			--We will be divvying up the bonuses by giving a portion of the bankers an extra credit.
 			--banker_recv_bonus will be used to ensure that a singular banker doesn't receive the majority of the bonuses.
 			for _, banker in ipairs(banker_list) do
 				if bonuses_left > 0 and not banker.banker_recv_bonus then
-					banker.tmp_payment = banker.tmp_payment + 1
+					if credit_ceiling >= 0 and banker.banker_credits_recv + banker.banker_tmp_payment >= credit_ceiling then
+						--Give the bonus to someone else as this banker has hit their quota
+						continue
+					end
+					
+					banker.banker_tmp_payment = banker.banker_tmp_payment + 1
 					banker.banker_recv_bonus = true
 					bonuses_left = bonuses_left - 1
 				end
@@ -72,12 +87,18 @@ if SERVER then
 			
 			if bonuses_left > 0 then
 				--At this point, all of the bankers have received a bonus at some point.
-				--i.e. banker_recv_bonus is true for all.
+				--e.x. banker_recv_bonus is true for all, or some banker hit their credit ceiling but others didn't.
 				--It is time to reset banker_missed_out while also dishing out the rest of the credits.
 				for _, banker in ipairs(banker_list) do
 					if bonuses_left > 0 then
-						banker.tmp_payment = banker.tmp_payment + 1
-						banker.banker_recv_bonus = true --For sanity
+						if credit_ceiling >= 0 and banker.banker_credits_recv + banker.banker_tmp_payment >= credit_ceiling then
+							--Give the bonus to someone else as this banker has hit their quota
+							banker.banker_recv_bonus = false
+							continue
+						end
+						
+						banker.banker_tmp_payment = banker.banker_tmp_payment + 1
+						banker.banker_recv_bonus = true
 						bonuses_left = bonuses_left - 1
 					else
 						banker.banker_recv_bonus = false
@@ -87,10 +108,14 @@ if SERVER then
 		end
 		
 		--Finally, send those paychecks!
+		--Do this even if the banker is being given 0 credits, to inform them that someone bought something.
 		for _, banker in ipairs(banker_list) do
-			banker:AddCredits(banker.tmp_payment)
-			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.tmp_payment})
-			banker.tmp_payment = nil
+			--print("BANK_DEBUG PayBankers: name=" .. banker:GetName() .. ", prev_recv=" .. banker.banker_credits_recv .. ", tmp=" .. banker.banker_tmp_payment .. ", recv_bonus=" .. tostring(banker.banker_recv_bonus))
+			
+			banker:AddCredits(banker.banker_tmp_payment)
+			banker.banker_credits_recv = banker.banker_credits_recv + banker.banker_tmp_payment
+			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.banker_tmp_payment})
+			banker.banker_tmp_payment = nil
 		end
 	end
 	
@@ -100,6 +125,16 @@ if SERVER then
 		net.WriteInt(ply.banker_handouts_given, 16)
 		net.Send(ply)
 	end
+	
+	hook.Add("TTTPrepareRound", "BankerPrepareRoundForServer", function()
+		for _, ply in ipairs(player.GetAll()) do
+			ply.banker_recv_bonus = nil
+			ply.banker_handouts_given = nil
+			ply.banker_will = nil
+			ply.banker_tmp_payment = nil
+			ply.banker_credits_recv = nil
+		end
+	end)
 	
 	function ROLE:GiveRoleLoadout(ply, isRoleChange)
 		--Maintain banker_recv_bonus across role changes to maintain long term equity.
@@ -111,6 +146,9 @@ if SERVER then
 		--Reward players for breaking the system via exuberant role switching (for fun!)
 		ply.banker_handouts_given = 0
 		SendHandoutsGivenToClient(ply)
+		
+		--Same idea for keeping track of how many credits they were given
+		ply.banker_credits_recv = 0
 	end
 	
 	hook.Add("TTT2OrderedEquipment", "BankerReceiveCreditsFromShopOrders", function(ply, cls, is_item, credits, ignoreCost)
@@ -210,6 +248,11 @@ if CLIENT then
 		local handouts_given = net.ReadInt(16)
 		
 		client.banker_handouts_given = handouts_given
+	end)
+	
+	hook.Add("TTTPrepareRound", "BankerPrepareRoundForClient", function()
+		local client = LocalPlayer()
+		client.banker_handouts_given = nil
 	end)
 	
 	hook.Add("TTT2CanTransferCredits", "BankerCanTransferCreditsForClient", function(ply, target, credits)
