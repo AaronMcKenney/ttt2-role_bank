@@ -1,0 +1,75 @@
+[i]While the Detectives get all of the credit, everyone knows that Terrorist HQ would be nothing without its loyal Bankers.[/i]
+ 
+You have to use [URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1357204556]TTT2[/URL] in order to use this role. Additionally using [URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1362430347]ULX for TTT2[/URL] is recommended. Report bugs concerning this role [URL=https://github.com/AaronMcKenney/ttt2-role_bank]here[/URL] and submit new role ideas [URL=https://github.com/TTT-2/addon-ideas]here[/URL]. A list of all currently available roles can be found [URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1737053146]here[/URL].
+ 
+Discord: [url=https://discord.gg/Npcbb4W]https://discord.gg/Npcbb4W[/url]
+Source: [url=https://github.com/AaronMcKenney/ttt2-role_bank]https://github.com/AaronMcKenney/ttt2-role_bank[/url]
+ 
+ 
+[img]https://i.imgur.com/KeP4fWN.png[/img]
+ 
+The Banker is a "Detective" subrole who receives all of the credits that every other role spends in the shop. If there are multiple bankers, the credits are split among them in an equitable round robin manner.
+ 
+The Banker is a well-respected, wise, and prominent figure in the terrorist community. It is of the Administration's belief that should the Banker die (Heaven forbid), their death would clearly be due to suicide. You are free to prove otherwise, of course.
+ 
+The Banker could use a better workout regimen and diet plan. They have some trouble sprinting long distances and receive more damage than the average person.
+ 
+For maximum profit, the Banker can transfer credits to a trustworthy Detective/Survivalist, who can then buy something and give the Banker back their hard-earned credits (This can only be done a certain amount of times).
+ 
+The best way to combat the Banker is through frugal spending and proper planning.
+ 
+[H1]Plays best with:[/H1]
+[list]
+    [*][URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1357256725]Survivalist[/URL]
+    [*][URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1363905854]Serialkiller[/URL]
+    [*][URL=https://steamcommunity.com/sharedfiles/filedetails/?id=1392362130]Jackal[/URL]
+    [*]Any other non-detective role that has access to a shop.
+[/list]
+ 
+ 
+[img]https://i.imgur.com/jIBWtbM.png[/img]
+ 
+Convars are variables that are introduced to allow server owners to customize the gameplay without changing the code. There are always a handful of convars automatically created by TTT2, that define the spawn parameters of this role and are found in ULX. Additionally there might be some role specific convars, which have to be set in the server config file.
+ 
+[h1]Normal Role Convars (also found in ULX):[/h1]
+[code]# enable or disable this role
+  ttt_banker_enabled [0/1] (default: 1)
+# the percentage of players that are spawned as this role
+  ttt_banker_pct [0.0..1.0] (default: 0.13)
+# the limit of players that spawn as this role each round, this overwrites the percentage
+  ttt_banker_max [0..n] (default: 1)
+# the probability each round of this role being spawned at all
+  ttt_banker_random [0..100] (default: 30)
+# the amount of players needed for this role to spawn
+  ttt_banker_min_players: [0..n] (default: 5)
+# the amount of credits this role starts with
+  ttt_bank_credits_starting [0..n] (default: 2)[/code]
+ 
+[h1]Rolespecific Convars:[/h1]
+[code]# How many credits can the Banker receive from purchases other shoppers make (infinite if -1)?
+  ttt2_banker_credit_ceiling [-1..n] (default: -1)
+# Should the banker's murderer receive all of their credits (provided that they are a shopping role)?
+  ttt2_banker_ron_swanswon_will [0/1] (default: 0)
+# If the Banker dies, how should everyone be informed?
+  ttt2_banker_broadcast_death_mode [0..2] (default: 1)
+  # 0: No broadcasting will occur
+  # 1: Everyone will be informed that the Banker committed suicide, regardless of what actually happened
+  # 2: If possible, the Banker's murderer will be made known to all, otherwise broadcast that they died under mysterious circumstances
+# Should the server broadcast anyone who covertly searches the Banker's dead body?
+  ttt2_banker_broadcast_covert_search [0/1] (default: 0)
+# How many credits can the Banker give out to others per round (infinite if -1)?
+  ttt2_banker_max_num_handouts [-1..n] (default: 2)
+# This multiplier applies directly to the damage that the banker would receive (ex. 2.0 means the banker takes twice as much damage from all sources).
+  ttt2_banker_recv_dmg_multi [0.0..n.m] (default: 1.25)
+# This multiplier applies directly to the banker's speed (ex. 0.5 means the banker moves half as fast).
+  ttt2_banker_speed_multi [0.0..n.m] (default: 1.0)
+# This multiplier applies directly to the banker's stamina regen (ex. 0.5 means the sprint bar fills up half the normal speed).
+  ttt2_banker_stamina_regen [0.0..n.m] (default: 0.35)
+# This multiplier applies directly to how fast the banker's stamina bar depletes (ex. 2.0 means the sprint bar decays twice as fast).
+  ttt2_banker_stamina_drain [0.0..n.m] (default: 1.25)[/code]
+ 
+--
+[h1]Credits:[/h1]
+[URL=https://steamcommunity.com/profiles/76561198025772353/]BlackMagicFine[/URL]: creator of this role addon
+[URL=https://steamcommunity.com/id/SmugglesTheButt/]Smuggles[/URL]: designer of the role icon
+[URL=https://steamcommunity.com/id/Zzzaaaccc13/]Wasted[/URL]: designer of the role thumbnail
