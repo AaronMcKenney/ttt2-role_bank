@@ -2,6 +2,7 @@ if SERVER then
 	AddCSLuaFile()
 	resource.AddFile("materials/vgui/ttt/dynamic/roles/icon_banker.vmt")
 	util.AddNetworkString("TTT2BankerBroadcastSuicide")
+	util.AddNetworkString("TTT2BankerBroadcastDeath")
 	util.AddNetworkString("TTT2BankerBroadcastMurderer")
 	util.AddNetworkString("TTT2BankerBroadcastCovertSearches")
 	util.AddNetworkString("TTT2BankerUpdateHandoutsGiven")
@@ -40,7 +41,7 @@ end
 
 if SERVER then
 	--ttt2_banker_broadcast_death_mode enum
-	local BROADCAST_DEATH_MODE = {NEVER = 0, SUICIDE = 1, MURDERER = 2}
+	local BROADCAST_DEATH_MODE = {NEVER = 0, SUICIDE = 1, DIED = 2, MURDERER = 3}
 	
 	local function GetAllBankers()
 		banker_list = {}
@@ -200,6 +201,9 @@ if SERVER then
 			net.Start("TTT2BankerBroadcastSuicide")
 			net.WriteString(victim:GetName())
 			net.Broadcast()
+		elseif mode == BROADCAST_DEATH_MODE.DIED then
+			net.Start("TTT2BankerBroadcastDeath")
+			net.Broadcast()
 		elseif mode == BROADCAST_DEATH_MODE.MURDERER then
 			net.Start("TTT2BankerBroadcastMurderer")
 			if attacker_name ~= nil then
@@ -273,6 +277,10 @@ if CLIENT then
 	net.Receive("TTT2BankerBroadcastSuicide", function()
 		local banker_name = net.ReadString()
 		EPOP:AddMessage({text = LANG.GetParamTranslation("broadcast_suicide_" .. BANKER.name, {name = banker_name}), color = BANKER.color}, "", 6)
+	end)
+	
+	net.Receive("TTT2BankerBroadcastDeath", function()
+		EPOP:AddMessage({text = LANG.GetTranslation("broadcast_death_" .. BANKER.name), color = COLOR_RED}, "", 6)
 	end)
 	
 	net.Receive("TTT2BankerBroadcastMurderer", function()

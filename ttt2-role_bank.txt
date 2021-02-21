@@ -10,7 +10,7 @@ Source: [url=https://github.com/AaronMcKenney/ttt2-role_bank]https://github.com/
  
 The Banker is a "Detective" subrole who receives all of the credits that every other role spends in the shop. If there are multiple bankers, the credits are split among them in an equitable round robin manner.
  
-The Banker is a well-respected, wise, and prominent figure in the terrorist community. It is of the Administration's belief that should the Banker die (Heaven forbid), their death would clearly be due to suicide. You are free to prove otherwise, of course.
+The Banker is a well-respected, wise, and prominent figure in the terrorist community. It is of the Administration's opinion that should the Banker die (Heaven forbid), their death would clearly be due to suicide and known by everyone immediately. You are free to prove otherwise, of course.
  
 The Banker could use a better workout regimen and diet plan. They have some trouble sprinting long distances and receive more damage than the average person.
  
@@ -51,10 +51,11 @@ Convars are variables that are introduced to allow server owners to customize th
 # Should the banker's murderer receive all of their credits (provided that they are a shopping role)?
   ttt2_banker_ron_swanswon_will [0/1] (default: 0)
 # If the Banker dies, how should everyone be informed?
-  ttt2_banker_broadcast_death_mode [0..2] (default: 1)
+  ttt2_banker_broadcast_death_mode [0..3] (default: 1)
   # 0: No broadcasting will occur
   # 1: Everyone will be informed that the Banker committed suicide, regardless of what actually happened
-  # 2: If possible, the Banker's murderer will be made known to all, otherwise broadcast that they died under mysterious circumstances
+  # 2: Everyone will be informed that the Banker has died
+  # 3: If possible, the Banker's murderer will be made known to all, otherwise broadcast that they died under mysterious circumstances
 # Should the server broadcast anyone who covertly searches the Banker's dead body?
   ttt2_banker_broadcast_covert_search [0/1] (default: 0)
 # How many credits can the Banker give out to others per round (infinite if -1)?
@@ -73,3 +74,4 @@ Convars are variables that are introduced to allow server owners to customize th
 [URL=https://steamcommunity.com/profiles/76561198025772353/]BlackMagicFine[/URL]: creator of this role addon
 [URL=https://steamcommunity.com/id/SmugglesTheButt/]Smuggles[/URL]: designer of the role icon
 [URL=https://steamcommunity.com/id/Zzzaaaccc13/]Wasted[/URL]: designer of the role thumbnail
+[URL=https://steamcommunity.com/profiles/76561198037564834]Veldrim[/URL]: heavily assisted with testing

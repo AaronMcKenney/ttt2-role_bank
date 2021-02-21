@@ -35,18 +35,20 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 	})
 	
 	--# If the Banker dies, how should everyone be informed?
-	--  ttt2_banker_broadcast_death_mode [0..2] (default: 1)
+	--  ttt2_banker_broadcast_death_mode [0..3] (default: 1)
 	--  # 0: No broadcasting will occur
 	--  # 1: Everyone will be informed that the Banker committed suicide, regardless of what actually happened
-	--  # 2: If possible, the Banker's murderer will be made known to all, otherwise broadcast that they died under mysterious circumstances
+	--  # 2: Everyone will be informed that the Banker has died
+	--  # 3: If possible, the Banker's murderer will be made known to all, otherwise broadcast that they died under mysterious circumstances
 	table.insert(tbl[ROLE_BANKER], {
 		cvar = "ttt2_banker_broadcast_death_mode",
 		combobox = true,
 		desc = "ttt2_banker_broadcast_death_mode (Def: 1)",
 		choices = {
 			"0 - No broadcasting will occur",
-			"1 - Tell everyone Banker committed suicide even if this is incorrect",
-			"2 - If possible, the Banker's murderer will be made known to all"
+			"1 - Always tell everyone that the Banker committed suicide",
+			"2 - Always tell everyone that the Banker has died",
+			"3 - If possible, the Banker's murderer will be made known to all"
 		},
 		numStart = 0
 	})
