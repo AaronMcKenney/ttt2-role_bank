@@ -171,7 +171,7 @@ if SERVER then
 	hook.Add("EntityTakeDamage", "BankerModifyDamage", function(target, dmg_info)
 		local attacker = dmg_info:GetAttacker()
 		
-		if not IsValid(target) or not target:IsPlayer() or target:GetSubRole() ~= ROLE_BANKER then
+		if not IsValid(target) or not target:IsPlayer() or target:GetSubRole() ~= ROLE_BANKER or SpecDM and (target.IsGhost and target:IsGhost()) then
 			return
 		end
 		
@@ -348,7 +348,7 @@ end
 ------------
 
 hook.Add("TTTPlayerSpeedModifier", "BankerModifySpeed", function(ply, _, _, no_lag)
-	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER or SpecDM and (ply.IsGhost and ply:IsGhost()) then
 		return
 	end
 	
@@ -356,7 +356,7 @@ hook.Add("TTTPlayerSpeedModifier", "BankerModifySpeed", function(ply, _, _, no_l
 end)
 
 hook.Add("TTT2StaminaDrain", "BankerModifyStaminaDrain", function(ply, stamina_drain_mod)
-	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER or SpecDM and (ply.IsGhost and ply:IsGhost()) then
 		return
 	end
 	
@@ -364,7 +364,7 @@ hook.Add("TTT2StaminaDrain", "BankerModifyStaminaDrain", function(ply, stamina_d
 end)
 
 hook.Add("TTT2StaminaRegen", "BankerModifyStaminaRegen", function(ply, stamina_regen_mod)
-	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER then
+	if not IsValid(ply) or ply:GetSubRole() ~= ROLE_BANKER or SpecDM and (ply.IsGhost and ply:IsGhost()) then
 		return
 	end
 	
