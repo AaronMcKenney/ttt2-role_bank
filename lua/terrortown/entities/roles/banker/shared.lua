@@ -181,6 +181,12 @@ if SERVER then
 	hook.Add("DoPlayerDeath", "BankerDoPlayerDeath", function(ply, attacker, dmginfo)
 		--DoPlayerDeath is called, followed by PostPlayerDeath, and then finally by PostPlayerDeath.
 		--Player isn't technically dead at this point.
+		
+		--...Unless they are a "ghost" in Spectator Deathmatch.
+		if SpecDM and (ply.IsGhost and ply:IsGhost()) then
+			return
+		end
+		
 		if not GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() or not IsValid(ply) or not ply:IsPlayer() or ply:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or not attacker:IsShopper() then
 			return
 		end
@@ -218,6 +224,11 @@ if SERVER then
 	end
 	
 	hook.Add("TTT2PostPlayerDeath", "BankerPostPlayerDeath", function(victim, inflictor, attacker)
+		--If the victim is a "ghost" (i.e. already once dead and died again) no need to do anything.
+		if SpecDM and (victim.IsGhost and victim:IsGhost()) then
+			return
+		end
+		
 		if not IsValid(victim) or not victim:IsPlayer() or victim:GetSubRole() ~= ROLE_BANKER or not IsValid(attacker) or not attacker:IsPlayer() or attacker:SteamID64() == victim:SteamID64() then
 			BroadcastDeath(victim, nil)
 			
