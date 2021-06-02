@@ -120,7 +120,7 @@ if SERVER then
 			
 			banker:AddCredits(banker.banker_tmp_payment)
 			banker.banker_credits_recv = banker.banker_credits_recv + banker.banker_tmp_payment
-			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.banker_tmp_payment})
+			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.banker_tmp_payment}, MSG_MSTACK_ROLE)
 			banker.banker_tmp_payment = nil
 		end
 	end
@@ -242,7 +242,7 @@ if SERVER then
 			attacker:AddCredits(victim.banker_will)
 			
 			--Send the good news to the attacker.
-			LANG.Msg(attacker, "will_" .. BANKER.name, {c = victim.banker_will})
+			LANG.Msg(attacker, "will_" .. BANKER.name, {c = victim.banker_will}, MSG_MSTACK_ROLE)
 		end
 		
 		BroadcastDeath(victim, attacker:GetName())
