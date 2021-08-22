@@ -54,7 +54,7 @@ if SERVER then
 		return banker_list
 	end
 	
-	local function PayBankers(banker_list, credits)
+	local function PayBankers(banker_list, purchaser, credits)
 		local credit_ceiling = GetConVar("ttt2_banker_credit_ceiling"):GetInt()
 		
 		--Transfer all credits that the ply paid to the banker(s) semi-evenly.
@@ -117,7 +117,7 @@ if SERVER then
 		--Do this even if the banker is being given 0 credits, to inform them that someone bought something.
 		for _, banker in ipairs(banker_list) do
 			--print("BANK_DEBUG PayBankers: name=" .. banker:GetName() .. ", prev_recv=" .. banker.banker_credits_recv .. ", tmp=" .. banker.banker_tmp_payment .. ", recv_bonus=" .. tostring(banker.banker_recv_bonus))
-			
+			events.Trigger(EVENT_BANK_CREDIT, banker, purchaser, banker.banker_tmp_payment)
 			banker:AddCredits(banker.banker_tmp_payment)
 			banker.banker_credits_recv = banker.banker_credits_recv + banker.banker_tmp_payment
 			LANG.Msg(banker, "receive_credits_" .. BANKER.name, {c = banker.banker_tmp_payment}, MSG_MSTACK_ROLE)
@@ -164,7 +164,7 @@ if SERVER then
 		
 		banker_list = GetAllBankers()
 		if #banker_list > 0 then
-			PayBankers(banker_list, credits)
+			PayBankers(banker_list, ply, credits)
 		end
 	end)
 	
@@ -239,6 +239,7 @@ if SERVER then
 		
 		if GetConVar("ttt2_banker_ron_swanswon_will"):GetBool() and victim.banker_will and victim.banker_will > 0 then
 			--Give all of the victim's credits (as noted in their will) to the attacker
+			events.Trigger(EVENT_BANK_WILL, victim, attacker, victim.banker_will)
 			attacker:AddCredits(victim.banker_will)
 			
 			--Send the good news to the attacker.
