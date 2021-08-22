@@ -23,8 +23,8 @@ L["no_handouts_" .. BANKER.name] = "No more handouts!"
 -- EVENT STRINGS
 -- Need to be very specifically worded, due to how the system translates them.
 L["title_event_bank_credit"] = "A Banker has benefited from a sale"
-L["desc_event_bank_credit"] = "{name1} received {c} credit(s) from {name2}'s shop purchase"
+L["desc_event_bank_credit"] = "{name1} received {c} credit(s) from {name2}'s shop purchase."
 L["title_event_bank_will"] = "A player was listed in a Banker's will"
-L["desc_event_bank_will"] = "{name1} received {c} credit(s) from {name2}'s will"
+L["desc_event_bank_will"] = "{name1} received {c} credit(s) from {name2}'s will."
 L["tooltip_bank_will_score"] = "Collected a Banker's Will: {score}"
 L["bank_will_score"] = "Collected a Banker's Will:"
