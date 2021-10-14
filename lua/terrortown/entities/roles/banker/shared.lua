@@ -12,14 +12,19 @@ function ROLE:PreInitialize()
 	self.color = Color(133, 187, 101, 255) -- color of a USA Dollar Bill
 	self.abbr = "bank" -- abbreviation
 	
-	self.scoreKillsMultiplier = 1
-	self.scoreTeamKillsMultiplier = -8
+	--Same scoring as generic detective
+	self.score.killsMultiplier = 8
+	self.score.teamKillsMultiplier = -8
+	self.score.bodyFoundMuliplier = 3
 	
 	self.fallbackTable = {}
 	self.unknownTeam = true -- disables team voice chat.
 
 	self.defaultTeam = TEAM_INNOCENT -- the team name: roles with same team name are working together
 	self.defaultEquipment = SPECIAL_EQUIPMENT -- here you can set up your own default equipment
+	
+	self.isPublicRole = true
+	self.isPolicingRole = true
 
 	-- ULX ConVars
 	self.conVarData = {
@@ -27,8 +32,8 @@ function ROLE:PreInitialize()
 		maximum = 1, -- maximum amount of roles in a round
 		minPlayers = 5, -- minimum amount of players until this role is able to get selected
 		credits = 2, -- the starting credits of a specific role
-		creditsTraitorKill = 0,
-		creditsTraitorDead = 1,
+		creditsAwardDeadEnable = 1,
+		creditsAwardKillEnable = 0,
 		shopFallback = SHOP_FALLBACK_DETECTIVE,
 		togglable = true, -- option to toggle a role for a client if possible (F1 menu)
 		random = 30
