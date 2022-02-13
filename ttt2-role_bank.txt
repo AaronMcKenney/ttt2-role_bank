@@ -10,11 +10,9 @@ Source: [url=https://github.com/AaronMcKenney/ttt2-role_bank]https://github.com/
  
 The Banker is a "Detective" subrole who receives all of the credits that every other role spends in the shop. If there are multiple bankers, the credits are split among them in an equitable round robin manner.
  
-The Banker is a well-respected, wise, and prominent figure in the terrorist community. It is of the Administration's opinion that should the Banker die (Heaven forbid), their death would clearly be due to suicide and known by everyone immediately. You are free to prove otherwise, of course.
- 
 The Banker could use a better workout regimen and diet plan. They have some trouble sprinting long distances and receive more damage than the average person.
  
-For maximum profit, the Banker can transfer credits to a trustworthy Detective/Survivalist, who can then buy something and give the Banker back their hard-earned credits (This can only be done a certain amount of times).
+For maximum profit, the Banker can transfer credits to a trustworthy Detective/Survivalist, who can then buy something and give the Banker back their hard-earned credits (This can only be done a certain number of times).
  
 The best way to combat the Banker is through frugal spending and proper planning.
  
@@ -51,7 +49,7 @@ Convars are variables that are introduced to allow server owners to customize th
 # Should the banker's murderer receive all of their credits (provided that they are a shopping role)?
   ttt2_banker_ron_swanswon_will [0/1] (default: 0)
 # If the Banker dies, how should everyone be informed?
-  ttt2_banker_broadcast_death_mode [0..3] (default: 1)
+  ttt2_banker_broadcast_death_mode [0..3] (default: 0)
   # 0: No broadcasting will occur
   # 1: Everyone will be informed that the Banker committed suicide, regardless of what actually happened
   # 2: Everyone will be informed that the Banker has died

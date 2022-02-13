@@ -1,7 +1,7 @@
 --ConVar syncing
 CreateConVar("ttt2_banker_credit_ceiling", "-1", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
 CreateConVar("ttt2_banker_ron_swanswon_will", "0", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
-CreateConVar("ttt2_banker_broadcast_death_mode", "1", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
+CreateConVar("ttt2_banker_broadcast_death_mode", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_broadcast_covert_search", "0", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
 CreateConVar("ttt2_banker_max_num_handouts", "2", {FCVAR_ARCHIVE, FCVAR_NOTFIY})
 CreateConVar("ttt2_banker_recv_dmg_multi", "1.25", {FCVAR_ARCHIVE, FCVAR_NOTIFY})
@@ -35,7 +35,7 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 	})
 	
 	--# If the Banker dies, how should everyone be informed?
-	--  ttt2_banker_broadcast_death_mode [0..3] (default: 1)
+	--  ttt2_banker_broadcast_death_mode [0..3] (default: 0)
 	--  # 0: No broadcasting will occur
 	--  # 1: Everyone will be informed that the Banker committed suicide, regardless of what actually happened
 	--  # 2: Everyone will be informed that the Banker has died
@@ -43,7 +43,7 @@ hook.Add("TTTUlxDynamicRCVars", "TTTUlxDynamicBankerCVars", function(tbl)
 	table.insert(tbl[ROLE_BANKER], {
 		cvar = "ttt2_banker_broadcast_death_mode",
 		combobox = true,
-		desc = "ttt2_banker_broadcast_death_mode (Def: 1)",
+		desc = "ttt2_banker_broadcast_death_mode (Def: 0)",
 		choices = {
 			"0 - No broadcasting will occur",
 			"1 - Always tell everyone that the Banker committed suicide",
