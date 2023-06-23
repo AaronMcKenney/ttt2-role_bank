@@ -184,7 +184,7 @@ if SERVER then
 	end)
 	
 	hook.Add("DoPlayerDeath", "BankerDoPlayerDeath", function(ply, attacker, dmginfo)
-		--DoPlayerDeath is called, followed by PostPlayerDeath, and then finally by PostPlayerDeath.
+		--DoPlayerDeath is called, followed by PostPlayerDeath, and then finally by TTT2PostPlayerDeath.
 		--Player isn't technically dead at this point.
 		
 		--...Unless they are a "ghost" in Spectator Deathmatch.
