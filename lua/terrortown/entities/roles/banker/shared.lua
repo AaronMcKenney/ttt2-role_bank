@@ -358,6 +358,89 @@ if CLIENT then
 		
 		return true, msg
 	end)
+
+	-------------
+	-- CONVARS --
+	-------------
+	function ROLE:AddToSettingsMenu(parent)
+		local form = vgui.CreateTTT2Form(parent, "header_roles_additional")
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_credit_ceiling",
+			label = "label_banker_credit_ceiling",
+			min = -1,
+			max = 10,
+			decimal = 0
+		})
+
+		form:MakeCheckBox({
+			serverConvar = "ttt2_banker_ron_swanswon_will",
+			label = "label_banker_ron_swanswon_will"
+		})
+
+		form:MakeComboBox({
+			serverConvar = "ttt2_banker_broadcast_death_mode",
+			label = "label_banker_broadcast_death_mode",
+			choices = {{
+				value = 0,
+				title = LANG.GetTranslation("label_banker_broadcast_death_mode_0")
+			},{
+				value = 1,
+				title = LANG.GetTranslation("label_banker_broadcast_death_mode_1")
+			},{
+				value = 2,
+				title = LANG.GetTranslation("label_banker_broadcast_death_mode_2")
+			},{
+				value = 3,
+				title = LANG.GetTranslation("label_banker_broadcast_death_mode_3")
+			}}
+		})
+
+		form:MakeCheckBox({
+			serverConvar = "ttt2_banker_broadcast_covert_search",
+			label = "label_banker_broadcast_covert_search"
+		})
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_max_num_handouts",
+			label = "label_banker_max_num_handouts",
+			min = -1,
+			max = 10,
+			decimal = 0
+		})
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_recv_dmg_multi",
+			label = "label_banker_recv_dmg_multi",
+			min = 1.0,
+			max = 3.0,
+			decimal = 2
+		})
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_speed_multi",
+			label = "label_banker_speed_multi",
+			min = 0.1,
+			max = 1.0,
+			decimal = 2
+		})
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_stamina_regen",
+			label = "label_banker_stamina_regen",
+			min = 0.1,
+			max = 1.0,
+			decimal = 2
+		})
+
+		form:MakeSlider({
+			serverConvar = "ttt2_banker_stamina_drain",
+			label = "label_banker_stamina_drain",
+			min = 1.0,
+			max = 3.0,
+			decimal = 2
+		})
+	end
 end
 
 ------------
